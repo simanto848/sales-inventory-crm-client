@@ -321,6 +321,7 @@ const CreateSale = () => {
               max="100"
               value={discountPercent}
               onChange={(e) => setDiscountPercent(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+              placeholder="e.g. 10"
             />
           </div>
 
@@ -337,6 +338,7 @@ const CreateSale = () => {
               min="0"
               value={taxPercent}
               onChange={(e) => setTaxPercent(Math.max(0, parseInt(e.target.value) || 0))}
+              placeholder="e.g. 15"
             />
           </div>
 

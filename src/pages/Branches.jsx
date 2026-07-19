@@ -292,6 +292,7 @@ const Branches = () => {
                   className="form-control"
                   value={branchName}
                   onChange={(e) => setBranchName(e.target.value)}
+                  placeholder="e.g. downtown store, chittagong depot"
                   required
                 />
               </div>
@@ -302,6 +303,7 @@ const Branches = () => {
                   className="form-control"
                   value={branchLocation}
                   onChange={(e) => setBranchLocation(e.target.value)}
+                  placeholder="e.g. 123 Main St, Chittagong"
                 />
               </div>
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={branchSubmitting}>
@@ -343,6 +345,7 @@ const Branches = () => {
                   className="form-control"
                   value={initialQty}
                   onChange={(e) => setInitialQty(e.target.value)}
+                  placeholder="e.g. 10"
                   required
                 />
               </div>
@@ -374,6 +377,7 @@ const Branches = () => {
                   className="form-control"
                   value={adjustQty}
                   onChange={(e) => setAdjustQty(e.target.value)}
+                  placeholder="e.g. 50"
                   required
                 />
               </div>

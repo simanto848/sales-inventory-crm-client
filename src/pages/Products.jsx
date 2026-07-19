@@ -278,6 +278,7 @@ const Products = () => {
                   className="form-control"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. iPhone 15 Pro, MacBook Pro 14"
                   required
                 />
               </div>
@@ -289,6 +290,7 @@ const Products = () => {
                   className="form-control"
                   value={formData.sku}
                   onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  placeholder="e.g. IPH15P-128, MBP14-M3"
                   required
                 />
               </div>
@@ -301,6 +303,7 @@ const Products = () => {
                   className="form-control"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="e.g. 999.00"
                   required
                 />
               </div>

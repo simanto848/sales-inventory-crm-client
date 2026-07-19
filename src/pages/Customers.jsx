@@ -170,7 +170,12 @@ const Customers = () => {
                         <div style={{ color: 'var(--text)' }}>{customer.phone || 'N/A'}</div>
                       </td>
                       <td>{customer.purchase_frequency} times</td>
-                      <td>{customer.last_purchase_date || 'Never'}</td>
+                      <td>
+                        {customer.last_purchase_date 
+                          ? new Date(customer.last_purchase_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                          : 'Never'
+                        }
+                      </td>
                       <td>
                         <span className={`badge ${isInactive ? 'badge-danger' : 'badge-success'}`}>
                           {isInactive ? 'Lost' : 'Active'}
@@ -289,6 +294,7 @@ const Customers = () => {
                   rows="4"
                   value={reEngageMessage}
                   onChange={(e) => setReEngageMessage(e.target.value)}
+                  placeholder="Enter a re-engagement message..."
                   required
                 />
               </div>
