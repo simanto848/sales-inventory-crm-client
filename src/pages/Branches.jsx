@@ -126,7 +126,7 @@ const Branches = () => {
 
   const openAdjustModal = (item) => {
     setAdjustProduct(item);
-    setAdjustQty(item.pivot?.stock_quantity || 0);
+    setAdjustQty(item.stock_quantity || 0);
     setShowAdjustModal(true);
   };
 
@@ -234,11 +234,12 @@ const Branches = () => {
                     </thead>
                     <tbody>
                       {branchInventory.map(item => {
-                        const qty = item.pivot?.stock_quantity || 0;
+                        const product = item.product || {};
+                        const qty = item.stock_quantity || 0;
                         return (
                           <tr key={item.id}>
-                            <td><code>{item.sku}</code></td>
-                            <td style={{ fontWeight: 600 }}>{item.name}</td>
+                            <td><code>{product.sku || 'N/A'}</code></td>
+                            <td style={{ fontWeight: 600 }}>{product.name || 'Unknown Product'}</td>
                             <td>
                               <span className={`badge ${qty <= 5 ? 'badge-danger' : qty <= 15 ? 'badge-warning' : 'badge-success'}`}>
                                 {qty}
@@ -247,7 +248,7 @@ const Branches = () => {
                             {isManager && (
                               <td>
                                 <button
-                                  onClick={() => openAdjustModal(item)}
+                                  onClick={() => openAdjustModal({ ...product, stock_quantity: qty })}
                                   className="btn btn-secondary"
                                   style={{ padding: '4px 8px', fontSize: '12px' }}
                                 >
