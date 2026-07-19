@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 
 const CreateSale = () => {
+  const { toast, alert } = useToast();
   const navigate = useNavigate();
 
   const [branches, setBranches] = useState([]);
@@ -154,11 +156,11 @@ const CreateSale = () => {
 
       const res = await api.post('/sales', payload);
       if (res.data.success) {
-        alert('Sale completed successfully! An HTML invoice has been automatically generated and sent to the customer.');
+        toast('Sale completed successfully! An HTML invoice has been sent to the customer.', 'success');
         navigate('/sales');
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error executing checkout transaction.');
+      toast(err.response?.data?.message || 'Error executing checkout transaction.', 'error');
     } finally {
       setSubmitting(false);
     }

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 
 const Branches = () => {
+  const { toast, alert } = useToast();
   const { user } = useAuth();
   const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
@@ -85,14 +87,14 @@ const Branches = () => {
     try {
       const res = await api.post('/branches', { name: branchName, location: branchLocation });
       if (res.data.success) {
-        alert('Store branch created successfully.');
+        toast('Store branch created successfully.', 'success');
         setShowBranchModal(false);
         setBranchName('');
         setBranchLocation('');
         fetchBranches();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error creating branch.');
+      toast(err.response?.data?.message || 'Error creating branch.', 'error');
     } finally {
       setBranchSubmitting(false);
     }
@@ -111,14 +113,14 @@ const Branches = () => {
         initial_quantity: parseInt(initialQty) || 0,
       });
       if (res.data.success) {
-        alert('Product linked to branch inventory successfully.');
+        toast('Product linked to branch inventory successfully.', 'success');
         setShowLinkModal(false);
         setSelectedProductId('');
         setInitialQty(0);
         handleBranchClick(selectedBranch);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error linking product.');
+      toast(err.response?.data?.message || 'Error linking product.', 'error');
     } finally {
       setLinkSubmitting(false);
     }
@@ -139,12 +141,12 @@ const Branches = () => {
         stock_quantity: parseInt(adjustQty) || 0,
       });
       if (res.data.success) {
-        alert('Stock levels updated successfully.');
+        toast('Stock levels updated successfully.', 'success');
         setShowAdjustModal(false);
         handleBranchClick(selectedBranch);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to adjust stock.');
+      toast(err.response?.data?.message || 'Failed to adjust stock.', 'error');
     } finally {
       setAdjustSubmitting(false);
     }

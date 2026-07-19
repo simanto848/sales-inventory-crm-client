@@ -11,6 +11,8 @@ import CreateSale from './pages/CreateSale';
 import Employees from './pages/Employees';
 import Sidebar from './components/Sidebar';
 
+import { ToastProvider } from './contexts/ToastContext';
+
 const ProtectedLayout = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -56,58 +58,60 @@ const PublicLayout = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={
-            <PublicLayout>
-              <Login />
-            </PublicLayout>
-          } />
+    <ToastProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={
+              <PublicLayout>
+                <Login />
+              </PublicLayout>
+            } />
 
-          {/* Protected Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedLayout>
-              <Dashboard />
-            </ProtectedLayout>
-          } />
-          <Route path="/products" element={
-            <ProtectedLayout>
-              <Products />
-            </ProtectedLayout>
-          } />
-          <Route path="/branches" element={
-            <ProtectedLayout>
-              <Branches />
-            </ProtectedLayout>
-          } />
-          <Route path="/customers" element={
-            <ProtectedLayout>
-              <Customers />
-            </ProtectedLayout>
-          } />
-          <Route path="/sales" element={
-            <ProtectedLayout>
-              <Sales />
-            </ProtectedLayout>
-          } />
-          <Route path="/sales/create" element={
-            <ProtectedLayout>
-              <CreateSale />
-            </ProtectedLayout>
-          } />
-          <Route path="/employees" element={
-            <ProtectedLayout>
-              <Employees />
-            </ProtectedLayout>
-          } />
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={
+              <ProtectedLayout>
+                <Dashboard />
+              </ProtectedLayout>
+            } />
+            <Route path="/products" element={
+              <ProtectedLayout>
+                <Products />
+              </ProtectedLayout>
+            } />
+            <Route path="/branches" element={
+              <ProtectedLayout>
+                <Branches />
+              </ProtectedLayout>
+            } />
+            <Route path="/customers" element={
+              <ProtectedLayout>
+                <Customers />
+              </ProtectedLayout>
+            } />
+            <Route path="/sales" element={
+              <ProtectedLayout>
+                <Sales />
+              </ProtectedLayout>
+            } />
+            <Route path="/sales/create" element={
+              <ProtectedLayout>
+                <CreateSale />
+              </ProtectedLayout>
+            } />
+            <Route path="/employees" element={
+              <ProtectedLayout>
+                <Employees />
+              </ProtectedLayout>
+            } />
 
-          {/* Fallback redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Fallback redirect */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

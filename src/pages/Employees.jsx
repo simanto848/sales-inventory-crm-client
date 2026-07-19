@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 
 const Employees = () => {
+  const { toast, confirm } = useToast();
   const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [topPerformers, setTopPerformers] = useState([]);
@@ -42,28 +44,29 @@ const Employees = () => {
     try {
       const res = await api.post('/employees', formData);
       if (res.data.success) {
-        alert('Employee registered successfully.');
+        toast('Employee registered successfully.', 'success');
         setShowRegModal(false);
         setFormData({ name: '', email: '', password: '', password_confirmation: '' });
         loadEmployeesData();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error registering employee.');
+      toast(err.response?.data?.message || 'Error registering employee.', 'error');
     } finally {
       setRegLoading(false);
     }
   };
 
   const handleDeleteEmployee = async (employee) => {
-    if (!window.confirm(`Are you sure you want to remove employee ${employee.name}?`)) return;
+    const isConfirmed = await confirm(`Are you sure you want to remove employee ${employee.name}?`, 'Remove Employee');
+    if (!isConfirmed) return;
     try {
       const res = await api.delete(`/employees/${employee.id}`);
       if (res.data.success) {
-        alert('Employee deleted successfully.');
+        toast('Employee deleted successfully.', 'success');
         loadEmployeesData();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete employee.');
+      toast(err.response?.data?.message || 'Failed to delete employee.', 'error');
     }
   };
 

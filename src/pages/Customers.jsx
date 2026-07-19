@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 
 const Customers = () => {
+  const { toast } = useToast();
   const { user } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -47,18 +49,18 @@ const Customers = () => {
       if (!employeeId) {
         const res = await api.post(`/customers/${customerId}/unassign-employee`);
         if (res.data.success) {
-          alert('Employee unassigned successfully.');
+          toast('Employee unassigned successfully.', 'success');
           loadData();
         }
       } else {
         const res = await api.post(`/customers/${customerId}/assign-employee`, { employee_id: employeeId });
         if (res.data.success) {
-          alert('Employee assigned successfully.');
+          toast('Employee assigned successfully.', 'success');
           loadData();
         }
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error updating assignment.');
+      toast(err.response?.data?.message || 'Error updating assignment.', 'error');
     }
   };
 
@@ -88,12 +90,12 @@ const Customers = () => {
       });
 
       if (res.data.success) {
-        alert(`Re-engagement notification sent successfully using ${reEngageChannel}!`);
+        toast(`Re-engagement notification sent successfully using ${reEngageChannel}!`, 'success');
         setShowReEngage(false);
         setReEngageMessage('');
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to send re-engagement.');
+      toast(err.response?.data?.message || 'Failed to send re-engagement.', 'error');
     } finally {
       setReEngageLoading(false);
     }

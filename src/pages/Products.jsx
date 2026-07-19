@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import api from '../utils/api';
 
 const Products = () => {
+  const { toast, confirm } = useToast();
   const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -96,7 +98,7 @@ const Products = () => {
         // Update product
         const res = await api.put(`/products/${editProduct.id}`, formData);
         if (res.data.success) {
-          alert('Product updated successfully.');
+          toast('Product updated successfully.', 'success');
           setShowModal(false);
           fetchProducts(pagination.current_page, searchQuery);
         }
@@ -104,28 +106,29 @@ const Products = () => {
         // Create product
         const res = await api.post('/products', formData);
         if (res.data.success) {
-          alert('Product created successfully.');
+          toast('Product created successfully.', 'success');
           setShowModal(false);
           fetchProducts(1, searchQuery);
         }
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Error processing product request.');
+      toast(err.response?.data?.message || 'Error processing product request.', 'error');
     } finally {
       setModalLoading(false);
     }
   };
 
   const handleDeleteProduct = async (product) => {
-    if (!window.confirm(`Are you sure you want to delete ${product.name}?`)) return;
+    const isConfirmed = await confirm(`Are you sure you want to delete ${product.name}?`, 'Delete Product');
+    if (!isConfirmed) return;
     try {
       const res = await api.delete(`/products/${product.id}`);
       if (res.data.success) {
-        alert('Product deleted successfully.');
+        toast('Product deleted successfully.', 'success');
         fetchProducts(pagination.current_page, searchQuery);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete product.');
+      toast(err.response?.data?.message || 'Failed to delete product.', 'error');
     }
   };
 
