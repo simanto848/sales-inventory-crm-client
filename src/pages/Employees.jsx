@@ -12,7 +12,8 @@ const Employees = () => {
 
   // Modals & form state
   const [showRegModal, setShowRegModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', password_confirmation: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', password_confirmation: '', branch_id: '' });
+  const [branches, setBranches] = useState([]);
   const [regLoading, setRegLoading] = useState(false);
 
   const isAdmin = user?.role === 'admin';
@@ -34,19 +35,35 @@ const Employees = () => {
     }
   };
 
+  const loadBranches = async () => {
+    try {
+      const res = await api.get('/branches?per_page=100');
+      if (res.data && res.data.success) {
+        setBranches(res.data.data.data || res.data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+    }
+  };
+
   useEffect(() => {
     loadEmployeesData();
+    loadBranches();
   }, []);
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegLoading(true);
     try {
-      const res = await api.post('/employees', formData);
+      const payload = {
+        ...formData,
+        branch_id: formData.branch_id ? parseInt(formData.branch_id) : null,
+      };
+      const res = await api.post('/employees', payload);
       if (res.data.success) {
         toast('Employee registered successfully.', 'success');
         setShowRegModal(false);
-        setFormData({ name: '', email: '', password: '', password_confirmation: '' });
+        setFormData({ name: '', email: '', password: '', password_confirmation: '', branch_id: '' });
         loadEmployeesData();
       }
     } catch (err) {
@@ -245,6 +262,23 @@ const Employees = () => {
                   placeholder="Re-enter password"
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Scoped Branch (Optional)</label>
+                <select
+                  className="form-control"
+                  value={formData.branch_id}
+                  onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                >
+                  <option value="">-- Global (Access All Branches) --</option>
+                  {branches.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+                <span style={{ fontSize: '11px', color: 'var(--text)' }}>
+                  If selected, this employee will only be able to view and manage details for this branch.
+                </span>
               </div>
 
               <button
