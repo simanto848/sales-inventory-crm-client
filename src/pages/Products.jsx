@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 
 const Products = () => {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [branches, setBranches] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,6 +12,12 @@ const Products = () => {
     current_page: 1,
     last_page: 1,
   });
+
+  // Modal forms state
+  const [showModal, setShowModal] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
+  const [formData, setFormData] = useState({ name: '', sku: '', price: '' });
+  const [modalLoading, setModalLoading] = useState(false);
 
   const fetchProducts = async (page = 1, query = '') => {
     setLoading(true);
@@ -30,16 +38,20 @@ const Products = () => {
     }
   };
 
+  const loadBranches = async () => {
+    try {
+      const branchRes = await api.get('/branches');
+      if (branchRes.data && branchRes.data.success) {
+        setBranches(branchRes.data.data.data || branchRes.data.data);
+      }
+    } catch (err) {
+      console.error('Error loading branches:', err);
+    }
+  };
+
   useEffect(() => {
     const loadInitialData = async () => {
-      try {
-        const branchRes = await api.get('/branches');
-        if (branchRes.data && branchRes.data.success) {
-          setBranches(branchRes.data.data.data || branchRes.data.data);
-        }
-      } catch (err) {
-        console.error('Error loading branches:', err);
-      }
+      await loadBranches();
       fetchProducts(1);
     };
     loadInitialData();
@@ -64,21 +76,83 @@ const Products = () => {
     }
   };
 
+  const openAddModal = () => {
+    setEditProduct(null);
+    setFormData({ name: '', sku: '', price: '' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (product) => {
+    setEditProduct(product);
+    setFormData({ name: product.name, sku: product.sku, price: product.price });
+    setShowModal(true);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setModalLoading(true);
+    try {
+      if (editProduct) {
+        // Update product
+        const res = await api.put(`/products/${editProduct.id}`, formData);
+        if (res.data.success) {
+          alert('Product updated successfully.');
+          setShowModal(false);
+          fetchProducts(pagination.current_page, searchQuery);
+        }
+      } else {
+        // Create product
+        const res = await api.post('/products', formData);
+        if (res.data.success) {
+          alert('Product created successfully.');
+          setShowModal(false);
+          fetchProducts(1, searchQuery);
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error processing product request.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (product) => {
+    if (!window.confirm(`Are you sure you want to delete ${product.name}?`)) return;
+    try {
+      const res = await api.delete(`/products/${product.id}`);
+      if (res.data.success) {
+        alert('Product deleted successfully.');
+        fetchProducts(pagination.current_page, searchQuery);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete product.');
+    }
+  };
+
+  const isAdmin = user?.role === 'admin';
+
   return (
     <div>
       <div className="card-header">
         <h1 style={{ margin: 0, fontSize: '28px' }}>Inventory Catalog</h1>
-        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search by name, SKU..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            style={{ width: '260px' }}
-          />
-          <button type="submit" className="btn btn-primary">Search</button>
-        </form>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search by name, SKU..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              style={{ width: '260px' }}
+            />
+            <button type="submit" className="btn btn-primary">Search</button>
+          </form>
+          {isAdmin && (
+            <button onClick={openAddModal} className="btn btn-primary">
+              + Add Product
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card">
@@ -101,6 +175,7 @@ const Products = () => {
                       <th key={branch.id}>{branch.name} Stock</th>
                     ))}
                     <th>Total Available</th>
+                    {isAdmin && <th>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -130,6 +205,26 @@ const Products = () => {
                             {totalStock}
                           </span>
                         </td>
+                        {isAdmin && (
+                          <td>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button 
+                                onClick={() => openEditModal(product)} 
+                                className="btn btn-secondary"
+                                style={{ padding: '4px 8px', fontSize: '12px' }}
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteProduct(product)} 
+                                className="btn btn-danger"
+                                style={{ padding: '4px 8px', fontSize: '12px' }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -163,6 +258,62 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', background: 'var(--panel-bg)' }}>
+            <div className="card-header">
+              <h3 className="card-title">{editProduct ? 'Edit Product' : 'Add New Product'}</h3>
+              <button onClick={() => setShowModal(false)} className="btn btn-secondary" style={{ padding: '6px 12px' }}>Cancel</button>
+            </div>
+            
+            <form onSubmit={handleFormSubmit}>
+              <div className="form-group">
+                <label className="form-label">Product Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">SKU</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-control"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%' }}
+                disabled={modalLoading}
+              >
+                {modalLoading ? 'Saving...' : 'Save Product'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

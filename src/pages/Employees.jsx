@@ -1,29 +1,71 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 
 const Employees = () => {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [topPerformers, setTopPerformers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadEmployeesData = async () => {
-      try {
-        const [empRes, topRes] = await Promise.all([
-          api.get('/employees'),
-          api.get('/employees/top-performers'),
-        ]);
+  // Modals & form state
+  const [showRegModal, setShowRegModal] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', password_confirmation: '' });
+  const [regLoading, setRegLoading] = useState(false);
 
-        setEmployees(empRes.data.data.data || empRes.data.data || []);
-        setTopPerformers(topRes.data.data || []);
-      } catch (err) {
-        console.error('Error fetching employee KPI records:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const isAdmin = user?.role === 'admin';
+
+  const loadEmployeesData = async () => {
+    setLoading(true);
+    try {
+      const [empRes, topRes] = await Promise.all([
+        api.get('/employees?per_page=100'),
+        api.get('/employees/top-performers'),
+      ]);
+
+      setEmployees(empRes.data.data.data || empRes.data.data || []);
+      setTopPerformers(topRes.data.data || []);
+    } catch (err) {
+      console.error('Error fetching employee KPI records:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadEmployeesData();
   }, []);
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setRegLoading(true);
+    try {
+      const res = await api.post('/employees', formData);
+      if (res.data.success) {
+        alert('Employee registered successfully.');
+        setShowRegModal(false);
+        setFormData({ name: '', email: '', password: '', password_confirmation: '' });
+        loadEmployeesData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error registering employee.');
+    } finally {
+      setRegLoading(false);
+    }
+  };
+
+  const handleDeleteEmployee = async (employee) => {
+    if (!window.confirm(`Are you sure you want to remove employee ${employee.name}?`)) return;
+    try {
+      const res = await api.delete(`/employees/${employee.id}`);
+      if (res.data.success) {
+        alert('Employee deleted successfully.');
+        loadEmployeesData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete employee.');
+    }
+  };
 
   if (loading) {
     return (
@@ -35,7 +77,14 @@ const Employees = () => {
 
   return (
     <div>
-      <h1 style={{ marginBottom: '24px', fontSize: '28px' }}>Employees & KPIs</h1>
+      <div className="card-header" style={{ marginBottom: '24px' }}>
+        <h1 style={{ margin: 0, fontSize: '28px' }}>Employees & KPIs</h1>
+        {isAdmin && (
+          <button onClick={() => setShowRegModal(true)} className="btn btn-primary">
+            + Register Employee
+          </button>
+        )}
+      </div>
 
       <div className="card" style={{ background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(139, 92, 246, 0.05))', border: '1px solid var(--primary)', marginBottom: '32px' }}>
         <h3 className="card-title" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -87,6 +136,7 @@ const Employees = () => {
                   <th>Role</th>
                   <th>KPI Score</th>
                   <th>Performance Tier</th>
+                  {isAdmin && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -115,6 +165,19 @@ const Employees = () => {
                           <span className="badge badge-warning">Probation</span>
                         )}
                       </td>
+                      {isAdmin && (
+                        <td>
+                          {emp.role !== 'admin' && (
+                            <button
+                              onClick={() => handleDeleteEmployee(emp)}
+                              className="btn btn-danger"
+                              style={{ padding: '4px 8px', fontSize: '12px' }}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -123,6 +186,72 @@ const Employees = () => {
           </div>
         )}
       </div>
+
+      {/* Register Modal */}
+      {showRegModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', background: 'var(--panel-bg)' }}>
+            <div className="card-header">
+              <h3 className="card-title">Register Employee User</h3>
+              <button onClick={() => setShowRegModal(false)} className="btn btn-secondary" style={{ padding: '6px 12px' }}>Cancel</button>
+            </div>
+            <form onSubmit={handleRegisterSubmit}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Email Address</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Confirm Password</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  value={formData.password_confirmation}
+                  onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%' }}
+                disabled={regLoading}
+              >
+                {regLoading ? 'Registering...' : 'Register User'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -24,6 +24,9 @@ const Sidebar = () => {
         <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <span>📦</span> Inventory Catalog
         </NavLink>
+        <NavLink to="/branches" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <span>🏢</span> Store Branches
+        </NavLink>
         <NavLink to="/customers" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <span>👥</span> Customers CRM
         </NavLink>

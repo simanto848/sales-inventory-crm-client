@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import Branches from './pages/Branches';
 import Customers from './pages/Customers';
 import Sales from './pages/Sales';
 import CreateSale from './pages/CreateSale';
@@ -74,6 +75,11 @@ function App() {
           <Route path="/products" element={
             <ProtectedLayout>
               <Products />
+            </ProtectedLayout>
+          } />
+          <Route path="/branches" element={
+            <ProtectedLayout>
+              <Branches />
             </ProtectedLayout>
           } />
           <Route path="/customers" element={
